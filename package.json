@@ -6,7 +6,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "check": "tsc -p tsconfig.json --noEmit",
-    "test": "npm run build && node --test dist/tests/domain/*.test.js"
+    "test": "npm run build && node --test dist/tests/domain/*.test.js dist/tests/integration/*.test.js",
+    "cli": "npm run build --silent && node dist/src/bootstrap/Main.js"
   },
   "devDependencies": {
     "typescript": "~5.9.3",

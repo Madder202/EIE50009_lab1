@@ -1,6 +1,6 @@
 # Lab1 Phase 1 项目文档
 
-本项目实现 TypeScript 面向对象的 CLI SVG 编辑器。当前完成需求、架构及领域模型，尚无 CLI 或文件 IO。所有工程产物位于 EIE50009_lab1 内，需求和验收矩阵见 [requirements.md](requirements.md)。
+本项目实现 TypeScript 面向对象的 CLI SVG 编辑器。当前完成领域模型及基础 CLI（init/create/tree/show/help），文件 IO 和撤销重做尚未接入。所有工程产物位于 EIE50009_lab1 内，需求和验收矩阵见 [requirements.md](requirements.md)。
 
 ## 架构方案
 
@@ -177,3 +177,15 @@ D01 示例：根为 A[a,x]、B[b,y]，group G b a 后为 G[a,b]、A[x]、B[y]；
 目录一致性：本阶段建立 src/domain/model、src/domain/ports 和 tests/domain，均在规划目录内；factory/application/presentation/infrastructure/bootstrap 按阶段尚未创建。提前实现领域级 addTo/delete 和内存 Memento，用于验证父子关系、ID 释放及克隆隔离，不代表 CLI addto/delete 或 undo/redo 命令完成。依赖仅在 domain 内，外部 IO 未进入领域。
 
 验收进度：A05/A06/A07/A10/A14/A20/A21 获得部分领域级证据，相关 CLI/历史/完整功能验收仍待后续执行；不将整个 Phase 1 标记为通过。
+
+### 2026-10-29：CLI 基础命令阶段
+
+实现 CommandLineParser、Repl、EditorSession、CommandDispatcher 以及独立 Init/Create/Tree/Show/Help 命令类，Main 装配 readline 标准输入输出。ShapeFactory 是唯一图形类型分派，六个 Definition 分别校验参数并构造模型。没有将几何业务搬入命令分发器或 REPL。
+
+新增 DocumentDisplay 应用端口，由 presentation 的 TextDocumentDisplay、TreeRenderer、ShowRenderer 实现；命令通过接口获取文本展示，避免 application 反向依赖 presentation。ShapeFormatter 仅遍历领域只读属性，不按图形标签分派。展示采用完整几何属性名（width/height 等），保留原文要求的树层级、关键几何和父级信息，不逐字符仿制示例排版。
+
+解析器保留 token 是否加引号的信息，只有未加引号的尾部 in 才识别为归属子句，文本 "in" 和空文本可正常创建。颜色 #ffffff 不当作注释，支持浮点、中文、双引号与反斜杠转义。错误由 ErrorFormatter 统一添加单行 error: 前缀；失败不替换当前文档。help 可在 init 前执行，并列出当前已实现命令与六种创建参数，明确后续命令尚未实现。
+
+验证：npm test 编译并通过全部 16 项测试（原 11 项领域测试及 5 项集成测试）；npm run check 通过。集成测试覆盖 token 边界、六类型构建、嵌套 in、show/tree、默认尺寸、未知命令/类型、重复 ID、无容器/非容器、错误参数、失败后完整树与画布保持不变，以及真实 Node 子进程 EOF 退出。另用 examples/intro.txt 实际执行 npm run cli，验证中文、颜色、错误恢复和嵌套结构。
+
+架构进度：factory、application、presentation、bootstrap 按规划落地；新增应用接口 CommandToken 和 DocumentDisplay，均为只读传输/抽象，不是贫血领域模型。ShapeDefinition 当前仅实现 CLI 构造；SVG 属性构造留在 read 阶段扩展同一工厂，不新增类型分派。Command 已开始落地；EditCommand 和 History 仍待撤销阶段实现，不宣称 create 已支持撤销。A01/A03/A04/A15 的本轮支持范围已有集成证据，完整 help/历史/IO 验收待后续补齐。

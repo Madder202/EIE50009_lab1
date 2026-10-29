@@ -1,0 +1,14 @@
+# 最小嵌套场景，可逐行粘贴到 svg> 提示符
+init 800 600
+create g scene
+create g node in scene
+create rect panel 20.5 30 160 60 #ffffff in node
+create text title 35 65 "你好 SVG 编辑器" in node
+create circle dot 240 60 20 red in scene
+create line edge 180.5 60 220 60 black in scene
+tree
+show title
+tree node
+# 故意重复 ID，失败后 tree 应保持原状
+create circle dot 0 0 10
+tree
