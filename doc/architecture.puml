@@ -1,0 +1,20 @@
+@startuml
+skinparam packageStyle rectangle
+package "bootstrap" as B
+package "presentation" as P
+package "application (commands + ports)" as A
+package "infrastructure" as I
+package "domain.factory" as F
+package "domain.model + domain.ports" as D
+B --> P
+B --> A
+B --> I
+P --> A
+P --> D
+I --> A
+I --> F
+I --> D
+A --> F
+A --> D
+F --> D
+@enduml
