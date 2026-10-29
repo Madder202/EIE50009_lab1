@@ -17,7 +17,7 @@ test('original sections 6 and 6.1 A replay through actual CLI with semantic asse
   const input=readFileSync(resolve(cwd,name+'.txt'),'utf8');
   const result=spawnSync(process.execPath,[resolve('dist/src/bootstrap/Main.js')],{cwd,input,encoding:'utf8'});
   assert.equal(result.status,0);assert.equal(result.stderr,'');
-  writeFileSync('doc/acceptance/'+name+'.log',result.stdout);
+  writeFileSync('doc/acceptance/'+name+'.log',result.stdout.split(/\r?\n/).map(line=>line.trimEnd()).join('\n').trim()+'\n');
   const errors=result.stdout.match(/error:[^\r\n]+/g)??[];
   assert.deepEqual(errors,name==='section6'?['error: cannot group a container into its own descendant: markers','error: undo not allowed after io command']:[]);
   if(name==='section6'){

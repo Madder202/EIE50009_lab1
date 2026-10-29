@@ -1,12 +1,12 @@
 # Lab1 Phase 1 项目文档
 
-本项目实现 TypeScript 面向对象的 CLI SVG 编辑器。当前完成领域模型、基础 CLI 和编辑历史（create/move/scale/set/delete/undo/redo）；结构编辑、SVG 文件 IO 与 canvas 命令均已接入；已完成本阶段功能综合验收，最终远程交付待完成。所有工程产物位于 EIE50009_lab1 内，需求和验收矩阵见 [requirements.md](requirements.md)。
+本项目实现 TypeScript 面向对象的 CLI SVG 编辑器。当前完成领域模型、基础 CLI 和编辑历史（create/move/scale/set/delete/undo/redo）；结构编辑、SVG 文件 IO 与 canvas 命令均已接入；已完成本阶段功能综合验收，最终交付按本次检查后的 main 提交与 final 标签进行。所有工程产物位于 EIE50009_lab1 内，需求和验收矩阵见 [requirements.md](requirements.md)。
 
 ## 架构方案
 
 ### 模块职责与目录
 
-下列为总体目录规划，按实现阶段创建；当前已实现 domain/model、domain/ports 和 tests/domain。每个类独占同名 .ts 文件；接口也单独放置，入口仅负责装配。
+下列模块已按阶段落地；测试实际分为 domain 和 integration，应用层场景归入 integration，未另建 tests/application。每个类独占同名 .ts 文件；接口也单独放置，入口仅负责装配。
 
 | 目录 | 主要类/接口 | 职责 |
 |---|---|---|
@@ -19,8 +19,8 @@
 | src/presentation | CommandLineParser、TreeRenderer、ShowRenderer、ErrorFormatter | 词法解析、树/属性输出和统一错误显示，不修改模型 |
 | src/infrastructure | NodeDocumentStore、SvgCodec、XmlShapeSink | Node 文件 IO 与 XML 解析/输出，落实应用层端口；不实现图形运算 |
 | src/bootstrap | Main | 构建并注入具体依赖、接入标准输入输出，提供 npm run cli |
-| tests | domain、application、integration 分组 | 不变量、事务/历史、命令回放和文件往返测试 |
-| examples | 后续会话脚本及 SVG | 保存可回放案例及浏览器预览成果 |
+| tests | domain、integration 分组 | 不变量、事务/历史、命令回放和文件往返测试 |
+| examples | 会话脚本及 SVG | 保存可回放案例及浏览器预览成果 |
 | doc | README.md、requirements.md、architecture.puml | 架构、过程与验收证据 |
 
 ### 依赖方向
@@ -96,11 +96,11 @@ Shape.emit(ShapeSink) 以多态输出类型、属性、文本和子树；XmlShap
 4. 在不再含 IO 或业务校验的提交段同步发布候选文档与历史状态，清空 redo、解除屏障，再输出摘要。
 5. 任一步准备失败则丢弃候选，不动当前文档、索引、路径和历史。命令不能缓存长期有效的节点引用，只保存 ID/参数。
 
-undo/redo 先准备从快照恢复的新文档和更新后的栈，再一起发布；不执行逆算术，也不重新 apply 命令。成功的无效果编辑仍建历史单元。查询、空行、注释和失败不改变栈。每条输入串行完成，包括异步文件 IO，避免 read/save 与后续编辑交错。
+undo/redo 先准备从快照恢复的新文档和更新后的栈，再一起发布；不执行逆算术，也不重新 apply 命令。成功的无效果编辑仍建历史单元。查询、空行、注释和失败不改变栈。每条输入串行完成；当前使用同步文件 IO，避免 read/save 与后续编辑交错。
 
 成功 init/read/save/canvas 修改均清空两栈并建立屏障；undo/redo 在屏障下统一报规定错误，下一成功编辑重新建立历史。canvas 查询不建立屏障。
 
-read 在候选中完成 XML 校验、全量显式 ID 扫描、缺 ID 分配及建树；成功发布后才显示警告。save 先序列化，再由 DocumentStore 使用目标同目录临时文件和替换策略写入，失败不变更会话历史；不通过先删原文件再写的方式冒险。文件替换的实际平台行为须在实现阶段验证，临时文件失败清理亦须测试。默认路径仅由成功 read 设定，init 清除，另存不改。
+read 在候选中完成 XML 校验、全量显式 ID 扫描、缺 ID 分配及建树；成功发布后才显示警告。save 先序列化，再由 DocumentStore 使用目标同目录临时文件和替换策略写入，失败不变更会话历史；不通过先删原文件再写的方式冒险。Windows 文件替换和失败时临时文件清理已通过 IO 集成测试。默认路径仅由成功 read 设定，init 清除，另存不改。
 
 ## 已确认的语义
 
@@ -149,26 +149,6 @@ D01 示例：根为 A[a,x]、B[b,y]，group G b a 后为 G[a,b]、A[x]、B[y]；
 ### 2026-10-29：语义确认与架构设计
 
 用户接受上一轮建议并要求设计架构、检查后提交。沿用现有 Git，选定 Command + Memento 和候选文档事务；比较逆操作与结构共享后，以精确恢复及原子性优先。识别 XML 导入、序列化和快照克隆容易出现额外类型分派，分别用统一工厂、多态 emit 和 clone 规避。记录 D03 的受限导入范围及其不能覆盖背景示例的影响。新增独立 PlantUML 源文件，并将需求清单的建议状态更新为已确认。
-
-## 一致性自查
-
-2026-10-29 综合验收：实际模块与原方案一致，领域、工厂、应用及命令、presentation、infrastructure、bootstrap 均已落地。新增的 GroupingPlan、CommandToken、HistoryTransition、DocumentDisplay、XmlElement 等辅助类/接口属于原规划模块，职责和原因已在阶段记录注明。文件 IO 改为同步端口以保证逐行串行处理，属于已记录的实现修订。
-
-依赖检查：tests/integration/architecture.test.ts 通过 TypeScript AST 检查全部生产源码，验证领域不依赖 IO/应用，工厂只依赖领域，应用不导入 presentation/infrastructure，外部依赖仅出现于 infrastructure/bootstrap；结果通过。每个生产类位于同名文件，状态字段为私有/受保护，未发现 switch 分派。没有把测试用的传输值或只读视图当作领域数据袋。
-
-人工抽查：Rectangle/TextShape 封装几何和文本，ContainerShape 通过多态操作子节点；SvgDocument 维护结构索引，GroupingPlan 独立完成分组定位；EditCommand→EditorSession→HistoryEntry/DocumentMemento 完成事务和历史；SvgCodec 通过 ShapeFactory 统一构造，emit/clone 不使用标签分派。按名字分派集中在 CommandDispatcher 和 ShapeFactory，R01/R02 待重构说明保留。容器能力判断 instanceof ContainerShape 不构成按类型名称分派。
-
-发现并修复：EditorSession.document 曾暴露当前可变文档引用，与查询隔离目标不一致。现返回独立副本，调用方无法绕过命令修改当前会话；新增回归测试证明修改副本不会影响文档和历史。代价是额外复制，已接受的当前性能限制仍存在。
-
-## 质量保证手段
-
-综合运行 npm test：45 项测试全部通过，包含 TypeScript 编译、领域、CLI、历史、结构、真实文件 IO、原文案例与架构检查；npm run check 单独检查类型。详细逐项结果见 [验收记录](acceptance/README.md)，涵盖 A01—A22；A23 的远程推送、最终标签和截止时间核验留到最终交付。
-
-原文第 6 节及 6.1 版本 A 已从输入逐行提取并通过真实 CLI 进程回放，输出日志、demo.svg、flowchart.svg 及 PNG 预览已保留。语义断言确认位置、尺寸、文字、ID、父级、节点数量和顺序，固定错误与预期一致。使用本地 resvg 渲染器生成图片并看图检查中文、布局和连线；并非浏览器截图。PNG 的预览字体设置不修改 SVG 本身。
-
-验证并非仅依赖测试数量：逐类型遍历 set 白名单、各编辑执行→撤销→重做完整快照比较、错误后 redo 继续可用、故障注入、真实文件覆盖失败和默认路径保持、SVG 特殊字符往返共同提供证据。编译、静态依赖审查、人工抽查与原文案例作为互补手段。限制及重现命令详见验收记录。
-
-以下保留各阶段实际过程，早期“待实现/待验证”描述是当时状态，当前结论以上述综合验收为准。
 
 ### 2026-10-29：领域模型实现与验证
 
@@ -249,3 +229,29 @@ XML 使用 saxes 严格解析库（已检查随包 README 和类型定义）；�
 重新阅读原文，提取两段指定会话，补充 acceptance/architecture 测试及 23 项验收矩阵。检查中发现会话文档引用泄漏并修复；新增查询副本隔离测试，调整特殊字符测试的准备方式，避免测试本身依赖绕过命令修改会话。新增 resvg 开发依赖用于可重现预览，生产 CLI 不依赖该渲染器。
 
 最终 45 项测试通过，指定案例只出现预期错误；两张 SVG 渲染图已人工检查。生产依赖规则、字段可见性和一类一文件自动检查通过；类型分派人工抽查只在规定两处。未推送或创建 final 标签，不将最终交付状态混同于功能验收通过。
+
+### 2026-10-29：最终交付检查
+
+检查本地和远程均无 final 标签，远程 origin 为 https://github.com/Madder202/EIE50009_lab1.git，检查时 main 位于架构提交 3d3579b；本地保留需求/架构、领域、CLI、历史、结构、IO、验收的完整分阶段提交。没有改写或合并历史。
+
+发现早期目录表、异步 IO 描述与现状不符，已更新；把后续阶段记录从质量保证章节移回过程记录，历史阶段当时的“未实现/待推送”表述保留为事实，不伪装成当时已完成。当前状态以一致性自查和最终 Git 引用为准。验收日志写入统一去除行尾空白，避免每次回放产生纯空白差异。
+
+本次交付在锁文件干净安装后重新验证；命令及结果保存在 acceptance/final-check.log。最终提交包含本轮修订，推送时将 main 与新建附注 final 标签一起发布；实际是否发布成功以远程 refs/heads/main 和 refs/tags/final^{} 的提交哈希一致为准。截止时间未知，不作按时提交承诺。
+
+## 一致性自查
+
+2026-10-29 综合验收：实际模块与原方案一致，领域、工厂、应用及命令、presentation、infrastructure、bootstrap 均已落地。新增的 GroupingPlan、CommandToken、HistoryTransition、DocumentDisplay、XmlElement 等辅助类/接口属于原规划模块，职责和原因已在阶段记录注明。文件 IO 改为同步端口以保证逐行串行处理，属于已记录的实现修订。
+
+依赖检查：tests/integration/architecture.test.ts 通过 TypeScript AST 检查全部生产源码，验证领域不依赖 IO/应用，工厂只依赖领域，应用不导入 presentation/infrastructure，外部依赖仅出现于 infrastructure/bootstrap；结果通过。每个生产类位于同名文件，状态字段为私有/受保护，未发现 switch 分派。没有把测试用的传输值或只读视图当作领域数据袋。
+
+人工抽查：Rectangle/TextShape 封装几何和文本，ContainerShape 通过多态操作子节点；SvgDocument 维护结构索引，GroupingPlan 独立完成分组定位；EditCommand→EditorSession→HistoryEntry/DocumentMemento 完成事务和历史；SvgCodec 通过 ShapeFactory 统一构造，emit/clone 不使用标签分派。按名字分派集中在 CommandDispatcher 和 ShapeFactory，R01/R02 待重构说明保留。容器能力判断 instanceof ContainerShape 不构成按类型名称分派。
+
+发现并修复：EditorSession.document 曾暴露当前可变文档引用，与查询隔离目标不一致。现返回独立副本，调用方无法绕过命令修改当前会话；新增回归测试证明修改副本不会影响文档和历史。代价是额外复制，已接受的当前性能限制仍存在。
+
+## 质量保证手段
+
+综合运行 npm test：45 项测试全部通过，包含 TypeScript 编译、领域、CLI、历史、结构、真实文件 IO、原文案例与架构检查；npm run check 单独检查类型。详细逐项结果见 [验收记录](acceptance/README.md)，涵盖 A01—A22；A23 的推送与标签通过远程 Git 引用核验；提交截止时间未提供，因此不能确认是否早于课程截止时间。
+
+原文第 6 节及 6.1 版本 A 已从输入逐行提取并通过真实 CLI 进程回放，输出日志、demo.svg、flowchart.svg 及 PNG 预览已保留。语义断言确认位置、尺寸、文字、ID、父级、节点数量和顺序，固定错误与预期一致。使用本地 resvg 渲染器生成图片并看图检查中文、布局和连线；并非浏览器截图。PNG 的预览字体设置不修改 SVG 本身。
+
+验证并非仅依赖测试数量：逐类型遍历 set 白名单、各编辑执行→撤销→重做完整快照比较、错误后 redo 继续可用、故障注入、真实文件覆盖失败和默认路径保持、SVG 特殊字符往返共同提供证据。编译、静态依赖审查、人工抽查与原文案例作为互补手段。限制及重现命令详见验收记录。

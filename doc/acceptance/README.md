@@ -38,7 +38,7 @@
 | A20 TypeScript/OO | 通过 | npm test 编译；architecture：同名类文件、非公开字段、模块依赖；人工抽查多态 |
 | A21 模式/依赖 | 通过 | architecture 自动检查及 doc/README.md 一致性自查，命令/工厂两处分派 |
 | A22 文档 | 通过 | README.md 架构、PlantUML 源、过程、修订、自查和 QA 已更新；图源与内嵌代码一致 |
-| A23 最终交付 | 待完成 | 已有分阶段本地 Git 历史；本轮不推送、不打 final 标签，截止时间未提供 |
+| A23 最终交付 | 按 final 引用核验 | 分阶段历史完整；最终交付将 main 与附注 final 标签发布至 origin，核对二者提交哈希；截止时间未提供，无法核验是否按时 |
 
 ## 修复与限制
 
@@ -59,3 +59,6 @@ npm test 会重新回放原文脚本并更新本目录日志/PNG、examples/acce
 ```text
 node --test dist/tests/integration/acceptance.test.js dist/tests/integration/architecture.test.js
 ```
+
+
+最终交付复核日志见 [final-check.log](final-check.log)。远程仓库为 https://github.com/Madder202/EIE50009_lab1.git；main 与 final 指向的一致性由交付时 Git 远程引用核验，不能仅依据本文推断推送成功。
