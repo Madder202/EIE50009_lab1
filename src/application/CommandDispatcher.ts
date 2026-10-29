@@ -1,3 +1,8 @@
+import { BackCommand } from './commands/BackCommand.js';
+import { FrontCommand } from './commands/FrontCommand.js';
+import { AddToCommand } from './commands/AddToCommand.js';
+import { UngroupCommand } from './commands/UngroupCommand.js';
+import { GroupCommand } from './commands/GroupCommand.js';
 import { MoveCommand } from './commands/MoveCommand.js';
 import { ScaleCommand } from './commands/ScaleCommand.js';
 import { SetCommand } from './commands/SetCommand.js';
@@ -25,6 +30,11 @@ export class CommandDispatcher {
       ['scale', { syntax: 'scale <id> <factor>', build: args => new ScaleCommand(args.map(t => t.value)) }],
       ['set', { syntax: 'set <id> <attr> <value>', build: args => new SetCommand(args.map(t => t.value)) }],
       ['delete', { syntax: 'delete <id>', build: args => new DeleteCommand(args.map(t => t.value)) }],
+      ['group', { syntax: 'group <newGid> <id1> <id2>…', build: args => new GroupCommand(args.map(t => t.value)) }],
+      ['ungroup', { syntax: 'ungroup <gid>', build: args => new UngroupCommand(args.map(t => t.value)) }],
+      ['addto', { syntax: 'addto <gid> <id>', build: args => new AddToCommand(args.map(t => t.value)) }],
+      ['front', { syntax: 'front <id>', build: args => new FrontCommand(args.map(t => t.value)) }],
+      ['back', { syntax: 'back <id>', build: args => new BackCommand(args.map(t => t.value)) }],
       ['undo', { syntax: 'undo', build: args => new UndoCommand(args.map(t => t.value)) }],
       ['redo', { syntax: 'redo', build: args => new RedoCommand(args.map(t => t.value)) }],
       ['tree', { syntax: 'tree [id]', build: args => new TreeCommand(args.map(t => t.value), display) }],

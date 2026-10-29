@@ -1,6 +1,6 @@
 # Lab1 Phase 1 项目文档
 
-本项目实现 TypeScript 面向对象的 CLI SVG 编辑器。当前完成领域模型、基础 CLI 和编辑历史（create/move/scale/set/delete/undo/redo）；文件 IO 与结构编辑 CLI 尚未接入。所有工程产物位于 EIE50009_lab1 内，需求和验收矩阵见 [requirements.md](requirements.md)。
+本项目实现 TypeScript 面向对象的 CLI SVG 编辑器。当前完成领域模型、基础 CLI 和编辑历史（create/move/scale/set/delete/undo/redo）；结构编辑 CLI 也已接入，文件 IO 与 canvas 命令尚未接入。所有工程产物位于 EIE50009_lab1 内，需求和验收矩阵见 [requirements.md](requirements.md)。
 
 ## 架构方案
 
@@ -202,3 +202,16 @@ HistoryEntry 私有持有操作前后 DocumentMemento 和成功摘要；History 
 通过 examples/history.txt 实际回放 npm run cli，观察 move/scale、文字修改、子树删除和撤销、无效缩放、redo 分支清空的反馈。撤销/重做输出为 undone:/redone: 加原操作摘要，以标识所恢复的历史单元。原文的 error: 固定错误保持一致。
 
 架构一致性：新增 History、HistoryEntry、HistoryTransition 及各独立命令文件均位于原规划模块。HistoryTransition 是只读事务结果，不替代领域对象；图形逻辑仍留在领域对象。为确保领域单独使用与应用事务都具备失败隔离，目前仍有多层复制，保留前一阶段记录的性能限制。功能验收 A05/A06/A07/A12/A14 已获得当前命令范围证据；结构编辑和 IO 对历史的完整验收在后续阶段继续，未实现功能不宣称通过。
+
+
+### 2026-10-29：结构编辑与 z-order
+
+实现 GroupCommand、UngroupCommand、AddToCommand、FrontCommand、BackCommand，均继承 EditCommand，通过现有事务和完整快照历史执行；分发只加入既有 CommandDispatcher。SvgDocument 管理结构操作及索引维护，新增领域辅助类 GroupingPlan 封装分组校验、操作前深度优先排序、最近公共祖先和插入位置计算，避免把分组算法堆进命令层或一个巨大函数。
+
+分组先拒绝重复目标、重复新 ID、缺失目标及祖先后代同时入选，至少两个目标；同父级插在最早选中位置，跨父级插在最近公共祖先的最早相关分支前。先记录顺序再迁移，参数逆序不改变结果。ungroup 在原位置提升全部子节点并释放容器 ID，空容器可解散；svg 的直接子容器拒绝解散。addto 将已有节点移到目标末尾，同父级调用也移到末尾；禁止自身/循环。front/back 分别移到同级末尾/开头，不改变父级及内部子树。
+
+这些结构操作保持节点几何和显式属性，不固化继承样式；换父级可能改变继承效果，ungroup 会删除该容器自身的样式。undo 使用快照恢复原容器、属性、父级及顺序，因此能还原之前的继承关系。这与前述 g 样式继承决策一致。
+
+验证：npm test 编译并通过全部 32 项测试，新增 8 项结构集成测试。覆盖同父级非连续目标、参数逆序、跨父级及深层最近公共祖先、保留未选分支、根级混合目标、解散空/嵌套容器、子树移动、同父级 addto、叶子和容器 z-order、输出事件顺序；五种命令逐一执行→undo→redo，比较完整文档快照，并验证一次命令只占一个单元、新编辑清 redo。非法分组、循环包含、根级 ungroup、错误参数保持完整状态和既有 redo。
+
+另用 examples/structure.txt 实际执行 npm run cli，确认跨容器分组、提升位置、连续撤销及预期错误的用户反馈。TypeScript 类型检查、每类独占同名文件、无 switch 类型分派和 application 依赖方向检查通过；未新增 IO 或插件逻辑。A08/A09/A10/A11/A12/A14 已获得当前结构命令范围的证据，最终读写往返和浏览器外观验证仍待 IO 阶段完成。

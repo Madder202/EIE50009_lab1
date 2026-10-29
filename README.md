@@ -1,6 +1,6 @@
 # EIE50009 Lab1
 
-TypeScript 面向对象 CLI SVG 编辑器。当前支持 init、create（六种类型及 in）、move、scale、set、delete、undo、redo、tree、show、help。
+TypeScript 面向对象 CLI SVG 编辑器。当前支持 init、create（六种类型及 in）、move、scale、set、delete、group、ungroup、addto、front、back、undo、redo、tree、show、help。
 
 ## 启动
 
@@ -40,7 +40,7 @@ npm run check
 ```
 
 npm test 编译并运行领域和 CLI 集成测试。dist/ 和 node_modules/ 不提交。
-本阶段输出结构树与属性，不显示图形画布；save/read 及 group/ungroup/addto/front/back CLI 命令尚未接入。架构与过程记录见 [doc/README.md](doc/README.md)。
+本阶段输出结构树与属性，不显示图形画布；save/read/canvas 命令尚未接入。架构与过程记录见 [doc/README.md](doc/README.md)。
 
 ## 编辑与撤销体验
 
@@ -63,3 +63,13 @@ tree
 scale 同时缩放位置与尺寸，stroke-width 不变。一次编辑对应一次撤销，create 也可撤销；查询不入栈。undo 后成功的新编辑清空 redo，失败命令保留历史。成功 init 清空历史并设置屏障，直到下一条成功编辑解除；屏障期间 undo/redo 报错。
 
 [examples/history.txt](examples/history.txt) 是独立完整的编辑回放脚本，可像 intro.txt 一样通过 PowerShell 管道运行。该脚本包含预期失败的 scale 0 和清空历史分支后的 redo。
+
+## 结构编辑
+
+- group G b a：按原文档顺序收编，而不是按输入顺序；跨父级放到最近公共祖先下。
+- ungroup G：将子节点提升到 G 原先的位置；svg 直接子容器禁止解散。
+- addto target item：把 item 放到 target 的最后；禁止自身或祖先移入后代。
+- front item / back item：只改变同级顺序，分别放到末尾（视觉上层）/开头（视觉下层）。
+
+每条结构编辑均支持一次 undo/redo 完整恢复。分组和移动归属保持几何与显式属性，继承样式随父级变化；解散容器不把容器样式复制到子图形。
+[examples/structure.txt](examples/structure.txt) 包含独立完整案例、撤销重做及预期错误。

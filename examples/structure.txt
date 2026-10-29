@@ -1,0 +1,28 @@
+init
+create g scene
+create g A in scene
+create g B in scene
+create circle a 20 20 10 red in A
+create circle x 40 20 10 blue in A
+create circle b 60 20 10 green in B
+create circle y 80 20 10 orange in B
+group G b a
+tree
+undo
+tree
+redo
+ungroup G
+tree
+undo
+addto B x
+front G
+back B
+tree
+undo
+undo
+undo
+# 根级容器不允许解散，失败不改变状态
+ungroup scene
+# 不允许将祖先移入后代
+addto A scene
+tree

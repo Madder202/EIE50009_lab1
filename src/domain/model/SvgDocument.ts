@@ -1,3 +1,4 @@
+import { GroupingPlan } from './GroupingPlan.js';
 import { Canvas } from './Canvas.js';
 import { Shape } from './Shape.js';
 import { ContainerShape } from './ContainerShape.js';
@@ -47,6 +48,42 @@ export class SvgDocument {
       }
       draft.#parents.get(id)!.removeOwned(id);
       target.insertOwned(node);
+    });
+  }
+  group(newId: string, ids: readonly string[]): void {
+    this.mutate(draft => {
+      if (ids.length < 2) throw new Error('group requires at least two shapes');
+      if (new Set(ids).size !== ids.length) throw new Error('duplicate group target');
+      if (draft.has(newId)) throw new Error('id already exists: ' + newId);
+      const group = new Group(newId);
+      const nodes = ids.map(id => draft.require(id));
+      const plan = new GroupingPlan(draft.#canvas, nodes, node => draft.#parents.get(node.id)!);
+      plan.apply(group);
+    });
+  }
+  ungroup(id: string): void {
+    this.mutate(draft => {
+      const group = draft.container(id);
+      const parent = draft.#parents.get(id)!;
+      if (parent === draft.#canvas) throw new Error('cannot ungroup top-level container: ' + id);
+      const index = parent.indexOf(id);
+      const children: Shape[] = [];
+      group.visitOwned(child => children.push(child));
+      parent.removeOwned(id);
+      children.forEach((child, offset) => {
+        group.removeOwned(child.id);
+        parent.insertOwned(child, index + offset);
+      });
+    });
+  }
+  front(id: string): void { this.reorder(id, true); }
+  back(id: string): void { this.reorder(id, false); }
+  private reorder(id: string, front: boolean): void {
+    this.mutate(draft => {
+      const node = draft.require(id);
+      const parent = draft.#parents.get(id)!;
+      parent.removeOwned(id);
+      parent.insertOwned(node, front ? undefined : 0);
     });
   }
   emit(sink: ShapeSink): void { this.#canvas.emit(sink); }
