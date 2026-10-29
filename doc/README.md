@@ -1,12 +1,12 @@
 # Lab1 Phase 1 项目文档
 
-本项目实现 TypeScript 面向对象的 CLI SVG 编辑器。当前完成需求与架构设计，尚无功能实现。所有工程产物位于 EIE50009_lab1 内，需求和验收矩阵见 [requirements.md](requirements.md)。
+本项目实现 TypeScript 面向对象的 CLI SVG 编辑器。当前完成需求、架构及领域模型，尚无 CLI 或文件 IO。所有工程产物位于 EIE50009_lab1 内，需求和验收矩阵见 [requirements.md](requirements.md)。
 
 ## 架构方案
 
 ### 模块职责与目录
 
-下列 src、tests、examples 目录为规划，按实现阶段创建，不用空实现冒充完成。每个类独占同名 .ts 文件；接口也单独放置，入口仅负责装配。
+下列为总体目录规划，按实现阶段创建；当前已实现 domain/model、domain/ports 和 tests/domain。每个类独占同名 .ts 文件；接口也单独放置，入口仅负责装配。
 
 | 目录 | 主要类/接口 | 职责 |
 |---|---|---|
@@ -153,11 +153,27 @@ D01 示例：根为 A[a,x]、B[b,y]，group G b a 后为 G[a,b]、A[x]、B[y]；
 ## 一致性自查
 
 - 设计层：模块图与依赖规则对应，无反向依赖；Command 和 Composite 有具体职责；两处分派有明确位置和待重构编号；文件 IO 与领域行为隔离。
-- 实现层：目前只有 doc 文档，src/tests/examples 是规划，不是目录偏差；尚不能声称代码符合依赖规则或通过功能测试。
+- 实现层：领域模型和领域测试已落地，其余模块仍为规划；当前领域依赖、封装和多态检查通过，完整功能测试尚未完成。
 - 后续每轮核对实际类文件名、私有字段、导入关系、类型分派位置；任何设计调整在本节记录，并同步图和正文。
 
 ## 质量保证手段
 
-本轮校对文档链接、PlantUML 源与内嵌图一致性及 Git 差异空白检查；未安装 PlantUML 渲染器，未声称完成图形渲染验证。功能验收全部待实现后执行，详见 requirements.md A01—A23。
+本轮校对文档链接、PlantUML 源与内嵌图一致性及 Git 差异空白检查；未安装 PlantUML 渲染器，未声称完成图形渲染验证。领域模型测试结果见下方阶段记录；完整命令验收详见 requirements.md A01—A23，尚未完成。
 
 后续重点：各命令及类型参数矩阵；失败时完整会话不变；结构编辑撤销后父级和顺序精确恢复；浮点移动/缩放撤销不漂移；文档屏障；SVG 语义往返和浏览器预览；第 6 节及第 6.1 节版本 A 回放；TypeScript 编译及依赖/封装审查。提交按需求/架构、模型、命令、历史、文件 IO、验收逐步推进，最终才建立 final 标签。截止日期尚未提供。
+
+### 2026-10-29：领域模型实现与验证
+
+沿用架构，建立 TypeScript 严格编译和 Node 内置测试工程。实现 Shape/ContainerShape 层次、六种内置图形、Canvas、SvgDocument、Style、Numbers、DocumentMemento，以及只读 ShapeView 和 ShapeSink 输出端口。所有类独占同名文件，字段使用 ECMAScript 私有字段；没有图形 tag 分派。
+
+统一操作证据：同一 Shape 数组对六种类型执行 move、scale、setAttribute、clone；嵌套 Group 递归移动/缩放后仍可按 ID 编辑内部叶子。几何校验和变换在具体图形内，树所有权/索引在 SvgDocument 内；命令层不会承担图形算法。
+
+自查补强：容器原有防环检查之外增加私有 WeakMap 所有权约束，拒绝同一对象挂到两个父级。输入节点进入文档时克隆，查询返回冻结投影，内部 visitOwned/insertOwned/removeOwned 只用于领域协作，应用层不能获得文档内部节点。结构变更后重新建立父级与 ID 索引，避免容器替换子节点后索引指向旧对象。
+
+本阶段 SvgDocument 的修改方法采用候选副本，失败直接丢弃；ContainerShape 对递归变换也采用候选子树，保证直接操作容器时发生溢出仍保持原状态。这使深层嵌套变换存在重复复制，最坏可能达到 O(N×深度)，并非所有操作都只有 O(N)。当前优先保证正确性，后续应用事务可基于实测优化复制，不提前引入复杂持久化树。
+
+验证结果：npm test 完成 TypeScript 编译及 11 项领域测试，全部通过。覆盖画布尺寸、六类型多态、嵌套容器、大小写 ID/子树重复 ID、移动归属和索引、循环/多父级、删除释放 ID、失败溢出原子性、样式继承、快照独立性、只读查询和多态输出事件。ShapeSink 测试仅验证事件，不代表 SVG 文件 IO 已完成。
+
+目录一致性：本阶段建立 src/domain/model、src/domain/ports 和 tests/domain，均在规划目录内；factory/application/presentation/infrastructure/bootstrap 按阶段尚未创建。提前实现领域级 addTo/delete 和内存 Memento，用于验证父子关系、ID 释放及克隆隔离，不代表 CLI addto/delete 或 undo/redo 命令完成。依赖仅在 domain 内，外部 IO 未进入领域。
+
+验收进度：A05/A06/A07/A10/A14/A20/A21 获得部分领域级证据，相关 CLI/历史/完整功能验收仍待后续执行；不将整个 Phase 1 标记为通过。
