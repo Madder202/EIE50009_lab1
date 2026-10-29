@@ -10,7 +10,10 @@
     "cli": "npm run build --silent && node dist/src/bootstrap/Main.js"
   },
   "devDependencies": {
-    "typescript": "~5.9.3",
-    "@types/node": "^24.0.0"
+    "@types/node": "^24.0.0",
+    "typescript": "~5.9.3"
+  },
+  "dependencies": {
+    "saxes": "^6.0.0"
   }
 }

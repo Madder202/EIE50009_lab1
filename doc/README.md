@@ -1,6 +1,6 @@
 # Lab1 Phase 1 项目文档
 
-本项目实现 TypeScript 面向对象的 CLI SVG 编辑器。当前完成领域模型、基础 CLI 和编辑历史（create/move/scale/set/delete/undo/redo）；结构编辑 CLI 也已接入，文件 IO 与 canvas 命令尚未接入。所有工程产物位于 EIE50009_lab1 内，需求和验收矩阵见 [requirements.md](requirements.md)。
+本项目实现 TypeScript 面向对象的 CLI SVG 编辑器。当前完成领域模型、基础 CLI 和编辑历史（create/move/scale/set/delete/undo/redo）；结构编辑、SVG 文件 IO 与 canvas 命令均已接入；最终综合验收仍待单独开展。所有工程产物位于 EIE50009_lab1 内，需求和验收矩阵见 [requirements.md](requirements.md)。
 
 ## 架构方案
 
@@ -215,3 +215,22 @@ HistoryEntry 私有持有操作前后 DocumentMemento 和成功摘要；History 
 验证：npm test 编译并通过全部 32 项测试，新增 8 项结构集成测试。覆盖同父级非连续目标、参数逆序、跨父级及深层最近公共祖先、保留未选分支、根级混合目标、解散空/嵌套容器、子树移动、同父级 addto、叶子和容器 z-order、输出事件顺序；五种命令逐一执行→undo→redo，比较完整文档快照，并验证一次命令只占一个单元、新编辑清 redo。非法分组、循环包含、根级 ungroup、错误参数保持完整状态和既有 redo。
 
 另用 examples/structure.txt 实际执行 npm run cli，确认跨容器分组、提升位置、连续撤销及预期错误的用户反馈。TypeScript 类型检查、每类独占同名文件、无 switch 类型分派和 application 依赖方向检查通过；未新增 IO 或插件逻辑。A08/A09/A10/A11/A12/A14 已获得当前结构命令范围的证据，最终读写往返和浏览器外观验证仍待 IO 阶段完成。
+
+
+### 2026-10-29：SVG 文件 IO 与 canvas
+
+实现 DocumentStore/DocumentCodec 应用端口、NodeDocumentStore、SvgCodec、XmlElement、XmlShapeSink 及独立 Read/Save/CanvasCommand。Main 注入具体 IO，application 不导入 Node API 或 XML 库。ShapeDefinition 增加 fromSvg，各具体 Definition 创建相应零值图形后由对象自身 setAttribute 校验导入属性；CLI 与 SVG 共享 ShapeFactory 唯一类型映射。序列化调用现有 Shape.emit，XmlShapeSink 仅处理通用 XML 输出，不按图形标签分派。
+
+XML 使用 saxes 严格解析库（已检查随包 README 和类型定义）；导入先验证根及结构，再预扫描显式 ID，重复即失败，按文档顺序为缺失/空 ID 分配最小可用标签序号。警告先缓存在候选结果中，仅在完整读取成功后输出。允许 XML 声明、注释、普通文本和 CDATA；拒绝 DTD、处理指令、混合文本子元素、未知标签/属性、transform 和不匹配 viewBox。命名空间限定根默认 SVG namespace；不支持前缀或嵌套命名空间声明。样式缺省保持省略，文本和属性实体及换行/回车/制表符正确转义，非法 XML 字符拒绝保存。
+
+文件保存先生成完整 XML、准备下一历史状态，再写目标同目录独占临时文件并 rename 替换；不先删除原文件，失败清理临时文件且不发布会话状态。Windows 实际文件测试覆盖成功覆盖已有文件和替换目录失败，未承诺进程崩溃/断电持久性。读取使用 UTF-8 严格解码；文件访问错误遵循 cannot read/write file，格式或范围错误提供 invalid SVG 原因。
+
+成功 read 发布候选文档、读入路径和新历史屏障；显式 save 不改变读入路径，save 无参数使用最近成功 read 路径，init 清除默认路径。成功 save 及 canvas 修改尺寸设置历史屏障，失败不改变文档、路径或两栈。canvas 无参数只读，不清空 redo。下一次成功编辑重新启用历史，但不能越过屏障。
+
+设计细化：本阶段存储端口使用同步方法，CLI 逐行同步完成 IO，天然避免文件操作与后续命令交错；这是此前异步 IO 串行编排设想的简化，实现文件范围下可接受，未来大文件需求再转换异步端口。本阶段有意不扩展既定 SVG 子集。
+
+验证：npm test 编译并通过 40 项测试，新增 8 项 IO 集成测试，覆盖全六类型往返、嵌套父级/顺序/样式、中文与 emoji/实体/空白转义、自动 ID 避免与后续显式 ID 冲突、重复 ID、格式及范围拒绝、带空格中文路径、另存不绑定路径、init 清除路径、真实读取/替换失败、临时文件清理、失败时 redo 保留、保存编码失败保持原文件、read/save 历史屏障及 canvas 查询/修改差异。临时测试文件建在项目内并自动清理。
+
+实际运行 examples/io.txt：生成 examples/preview.svg，保存后 undo 返回规定错误，读回完整树，再移动节点并无参数保存。已核对语义往返；浏览器像素外观尚未人工验收，不把生成成功当作视觉验收完成。示例文件可直接在浏览器打开供后续检查。
+
+目录/依赖自查：infrastructure、application/ports 及独立命令按规划落地；XmlElement 封装解析期树行为，属于 IO 适配内部，不泄漏到领域。两处分派位置保持不变。A02/A13/A16/A17/A18 获得本轮范围证据；最终完整会话回放、浏览器外观、远程提交与 final 标签仍按后续验收执行。

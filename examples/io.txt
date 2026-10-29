@@ -1,0 +1,16 @@
+init 800 300
+create g flow
+create g start in flow
+create rect start-box 40 100 160 60 #4a90d9 in start
+create text start-label 65 135 "开始 & 检查" in start
+create g end in flow
+create rect end-box 400 100 160 60 orange in end
+create text end-label 425 135 "完成 <保存>" in end
+create line connection 200 130 400 130 black in flow
+canvas
+save examples/preview.svg
+undo
+read examples/preview.svg
+tree
+move end 0 30
+save

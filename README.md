@@ -1,6 +1,6 @@
 # EIE50009 Lab1
 
-TypeScript 面向对象 CLI SVG 编辑器。当前支持 init、create（六种类型及 in）、move、scale、set、delete、group、ungroup、addto、front、back、undo、redo、tree、show、help。
+TypeScript 面向对象 CLI SVG 编辑器。当前支持 read、save、canvas、init、create（六种类型及 in）、move、scale、set、delete、group、ungroup、addto、front、back、undo、redo、tree、show、help。
 
 ## 启动
 
@@ -40,7 +40,7 @@ npm run check
 ```
 
 npm test 编译并运行领域和 CLI 集成测试。dist/ 和 node_modules/ 不提交。
-本阶段输出结构树与属性，不显示图形画布；save/read/canvas 命令尚未接入。架构与过程记录见 [doc/README.md](doc/README.md)。
+CLI 输出结构树与属性；现在可保存 SVG 并用浏览器查看画布。架构与过程记录见 [doc/README.md](doc/README.md)。
 
 ## 编辑与撤销体验
 
@@ -73,3 +73,22 @@ scale 同时缩放位置与尺寸，stroke-width 不变。一次编辑对应一�
 
 每条结构编辑均支持一次 undo/redo 完整恢复。分组和移动归属保持几何与显式属性，继承样式随父级变化；解散容器不把容器样式复制到子图形。
 [examples/structure.txt](examples/structure.txt) 包含独立完整案例、撤销重做及预期错误。
+
+## SVG 保存、读回与预览
+
+在 svg> 中输入：
+
+```text
+canvas
+canvas 800 600
+save examples/my-drawing.svg
+read examples/my-drawing.svg
+move scene 10 20
+save
+```
+
+move 的目标应替换为你的实际 ID。将生成的 SVG 拖入 Edge/Chrome 查看；再次保存后刷新浏览器。可直接查看仓库内的 [examples/preview.svg](examples/preview.svg)，其生成脚本为 [examples/io.txt](examples/io.txt)。
+
+save 无参数使用最近成功 read 的路径；init 后必须提供路径，显式 save 不重新绑定默认路径。路径含空格时使用双引号。成功 init/read/save/canvas 修改尺寸后 undo/redo 被禁止，下一次成功编辑才解除；canvas 无参数查询不影响历史。
+
+read 对缺失或空 ID 自动分配标签名加序号，先预留所有显式 ID 避免冲突；成功后打印警告。支持六种内置元素、嵌套 g、公共样式、几何属性和 text 文本；根需要标准 SVG namespace、正数 width/height，viewBox 可缺省或与画布一致。transform、font-size、text-anchor、未知元素/属性、非匹配 viewBox、DTD 等超出当前确认范围，明确报错，不能读取任意 SVG 编辑器导出的文件。文件以 UTF-8 读写。

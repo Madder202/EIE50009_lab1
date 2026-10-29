@@ -1,3 +1,5 @@
+import { NodeDocumentStore } from '../infrastructure/NodeDocumentStore.js';
+import { SvgCodec } from '../infrastructure/SvgCodec.js';
 import { createInterface } from 'node:readline';
 import { stdin, stdout } from 'node:process';
 import { EditorSession } from '../application/EditorSession.js';
@@ -7,7 +9,7 @@ import { TextDocumentDisplay } from '../presentation/TextDocumentDisplay.js';
 import { Repl } from '../presentation/Repl.js';
 export class Main {
   static run(): void {
-    const repl = new Repl(new CommandDispatcher(new ShapeFactory(), new TextDocumentDisplay()), new EditorSession());
+    const repl = new Repl(new CommandDispatcher(new ShapeFactory(), new TextDocumentDisplay()), new EditorSession(new NodeDocumentStore(), new SvgCodec()));
     const input = createInterface({ input: stdin, output: stdout, terminal: Boolean(stdin.isTTY && stdout.isTTY) });
     stdout.write("svg-editor 0.1 — type 'help' for commands\n");
     input.setPrompt('svg> ');

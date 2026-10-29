@@ -1,3 +1,6 @@
+import { CanvasCommand } from './commands/CanvasCommand.js';
+import { SaveCommand } from './commands/SaveCommand.js';
+import { ReadCommand } from './commands/ReadCommand.js';
 import { BackCommand } from './commands/BackCommand.js';
 import { FrontCommand } from './commands/FrontCommand.js';
 import { AddToCommand } from './commands/AddToCommand.js';
@@ -24,6 +27,9 @@ export class CommandDispatcher {
   readonly #commands: Map<string, { syntax: string; build: (args: readonly CommandToken[]) => Command }>;
   constructor(factory: ShapeFactory, display: DocumentDisplay) {
     this.#commands = new Map([
+      ['read', { syntax: 'read <file.svg>', build: args => new ReadCommand(args.map(t => t.value)) }],
+      ['save', { syntax: 'save [file.svg]', build: args => new SaveCommand(args.map(t => t.value)) }],
+      ['canvas', { syntax: 'canvas [w h]', build: args => new CanvasCommand(args.map(t => t.value)) }],
       ['init', { syntax: 'init [w] [h]', build: args => new InitCommand(args.map(t => t.value)) }],
       ['create', { syntax: 'create <type> <id> [params] [in <containerId>]', build: args => new CreateCommand(args, factory) }],
       ['move', { syntax: 'move <id> <dx> <dy>', build: args => new MoveCommand(args.map(t => t.value)) }],
@@ -53,6 +59,6 @@ export class CommandDispatcher {
       'Create parameters (after type and id):',
       '  rect x y w h [fill]', '  circle cx cy r [fill]', '  ellipse cx cy rx ry [fill]',
       '  line x1 y1 x2 y2 [stroke]', '  text x y "content"', '  g',
-      'All types support: in <containerId>', 'Other Phase 1 commands are not implemented yet.'].join('\n');
+      'All types support: in <containerId>', 'EOF exits the editor.'].join('\n');
   }
 }

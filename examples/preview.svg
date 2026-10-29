@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="300" viewBox="0 0 800 300"><g id="flow"><g id="start"><rect id="start-box" x="40" y="100" width="160" height="60" fill="#4a90d9"></rect><text id="start-label" x="65" y="135">开始 &amp; 检查</text></g><g id="end"><rect id="end-box" x="400" y="130" width="160" height="60" fill="orange"></rect><text id="end-label" x="425" y="165">完成 &lt;保存&gt;</text></g><line id="connection" x1="200" y1="130" x2="400" y2="130" stroke="black"></line></g></svg>
