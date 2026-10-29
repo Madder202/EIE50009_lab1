@@ -1,4 +1,5 @@
 # EIE50009 Lab1
+项目地址：https://github.com/Madder202/EIE50009_lab1
 
 TypeScript 面向对象 CLI SVG 编辑器。当前支持 read、save、canvas、init、create（六种类型及 in）、move、scale、set、delete、group、ungroup、addto、front、back、undo、redo、tree、show、help。
 
