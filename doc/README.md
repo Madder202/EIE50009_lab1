@@ -1,6 +1,6 @@
 # Lab1 Phase 1 项目文档
 
-本项目实现 TypeScript 面向对象的 CLI SVG 编辑器。当前完成领域模型、基础 CLI 和编辑历史（create/move/scale/set/delete/undo/redo）；结构编辑、SVG 文件 IO 与 canvas 命令均已接入；最终综合验收仍待单独开展。所有工程产物位于 EIE50009_lab1 内，需求和验收矩阵见 [requirements.md](requirements.md)。
+本项目实现 TypeScript 面向对象的 CLI SVG 编辑器。当前完成领域模型、基础 CLI 和编辑历史（create/move/scale/set/delete/undo/redo）；结构编辑、SVG 文件 IO 与 canvas 命令均已接入；已完成本阶段功能综合验收，最终远程交付待完成。所有工程产物位于 EIE50009_lab1 内，需求和验收矩阵见 [requirements.md](requirements.md)。
 
 ## 架构方案
 
@@ -152,15 +152,23 @@ D01 示例：根为 A[a,x]、B[b,y]，group G b a 后为 G[a,b]、A[x]、B[y]；
 
 ## 一致性自查
 
-- 设计层：模块图与依赖规则对应，无反向依赖；Command 和 Composite 有具体职责；两处分派有明确位置和待重构编号；文件 IO 与领域行为隔离。
-- 实现层：领域模型和领域测试已落地，其余模块仍为规划；当前领域依赖、封装和多态检查通过，完整功能测试尚未完成。
-- 后续每轮核对实际类文件名、私有字段、导入关系、类型分派位置；任何设计调整在本节记录，并同步图和正文。
+2026-10-29 综合验收：实际模块与原方案一致，领域、工厂、应用及命令、presentation、infrastructure、bootstrap 均已落地。新增的 GroupingPlan、CommandToken、HistoryTransition、DocumentDisplay、XmlElement 等辅助类/接口属于原规划模块，职责和原因已在阶段记录注明。文件 IO 改为同步端口以保证逐行串行处理，属于已记录的实现修订。
+
+依赖检查：tests/integration/architecture.test.ts 通过 TypeScript AST 检查全部生产源码，验证领域不依赖 IO/应用，工厂只依赖领域，应用不导入 presentation/infrastructure，外部依赖仅出现于 infrastructure/bootstrap；结果通过。每个生产类位于同名文件，状态字段为私有/受保护，未发现 switch 分派。没有把测试用的传输值或只读视图当作领域数据袋。
+
+人工抽查：Rectangle/TextShape 封装几何和文本，ContainerShape 通过多态操作子节点；SvgDocument 维护结构索引，GroupingPlan 独立完成分组定位；EditCommand→EditorSession→HistoryEntry/DocumentMemento 完成事务和历史；SvgCodec 通过 ShapeFactory 统一构造，emit/clone 不使用标签分派。按名字分派集中在 CommandDispatcher 和 ShapeFactory，R01/R02 待重构说明保留。容器能力判断 instanceof ContainerShape 不构成按类型名称分派。
+
+发现并修复：EditorSession.document 曾暴露当前可变文档引用，与查询隔离目标不一致。现返回独立副本，调用方无法绕过命令修改当前会话；新增回归测试证明修改副本不会影响文档和历史。代价是额外复制，已接受的当前性能限制仍存在。
 
 ## 质量保证手段
 
-本轮校对文档链接、PlantUML 源与内嵌图一致性及 Git 差异空白检查；未安装 PlantUML 渲染器，未声称完成图形渲染验证。领域模型测试结果见下方阶段记录；完整命令验收详见 requirements.md A01—A23，尚未完成。
+综合运行 npm test：45 项测试全部通过，包含 TypeScript 编译、领域、CLI、历史、结构、真实文件 IO、原文案例与架构检查；npm run check 单独检查类型。详细逐项结果见 [验收记录](acceptance/README.md)，涵盖 A01—A22；A23 的远程推送、最终标签和截止时间核验留到最终交付。
 
-后续重点：各命令及类型参数矩阵；失败时完整会话不变；结构编辑撤销后父级和顺序精确恢复；浮点移动/缩放撤销不漂移；文档屏障；SVG 语义往返和浏览器预览；第 6 节及第 6.1 节版本 A 回放；TypeScript 编译及依赖/封装审查。提交按需求/架构、模型、命令、历史、文件 IO、验收逐步推进，最终才建立 final 标签。截止日期尚未提供。
+原文第 6 节及 6.1 版本 A 已从输入逐行提取并通过真实 CLI 进程回放，输出日志、demo.svg、flowchart.svg 及 PNG 预览已保留。语义断言确认位置、尺寸、文字、ID、父级、节点数量和顺序，固定错误与预期一致。使用本地 resvg 渲染器生成图片并看图检查中文、布局和连线；并非浏览器截图。PNG 的预览字体设置不修改 SVG 本身。
+
+验证并非仅依赖测试数量：逐类型遍历 set 白名单、各编辑执行→撤销→重做完整快照比较、错误后 redo 继续可用、故障注入、真实文件覆盖失败和默认路径保持、SVG 特殊字符往返共同提供证据。编译、静态依赖审查、人工抽查与原文案例作为互补手段。限制及重现命令详见验收记录。
+
+以下保留各阶段实际过程，早期“待实现/待验证”描述是当时状态，当前结论以上述综合验收为准。
 
 ### 2026-10-29：领域模型实现与验证
 
@@ -234,3 +242,10 @@ XML 使用 saxes 严格解析库（已检查随包 README 和类型定义）；�
 实际运行 examples/io.txt：生成 examples/preview.svg，保存后 undo 返回规定错误，读回完整树，再移动节点并无参数保存。已核对语义往返；浏览器像素外观尚未人工验收，不把生成成功当作视觉验收完成。示例文件可直接在浏览器打开供后续检查。
 
 目录/依赖自查：infrastructure、application/ports 及独立命令按规划落地；XmlElement 封装解析期树行为，属于 IO 适配内部，不泄漏到领域。两处分派位置保持不变。A02/A13/A16/A17/A18 获得本轮范围证据；最终完整会话回放、浏览器外观、远程提交与 final 标签仍按后续验收执行。
+
+
+### 2026-10-29：综合验收与封装修复
+
+重新阅读原文，提取两段指定会话，补充 acceptance/architecture 测试及 23 项验收矩阵。检查中发现会话文档引用泄漏并修复；新增查询副本隔离测试，调整特殊字符测试的准备方式，避免测试本身依赖绕过命令修改会话。新增 resvg 开发依赖用于可重现预览，生产 CLI 不依赖该渲染器。
+
+最终 45 项测试通过，指定案例只出现预期错误；两张 SVG 渲染图已人工检查。生产依赖规则、字段可见性和一类一文件自动检查通过；类型分派人工抽查只在规定两处。未推送或创建 final 标签，不将最终交付状态混同于功能验收通过。

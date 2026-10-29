@@ -10,6 +10,7 @@
     "cli": "npm run build --silent && node dist/src/bootstrap/Main.js"
   },
   "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2",
     "@types/node": "^24.0.0",
     "typescript": "~5.9.3"
   },

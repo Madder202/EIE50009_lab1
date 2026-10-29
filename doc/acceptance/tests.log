@@ -1,0 +1,60 @@
+> eie50009-lab1@0.1.0 test
+> npm run build && node --test dist/tests/domain/*.test.js dist/tests/integration/*.test.js
+
+
+> eie50009-lab1@0.1.0 build
+> tsc -p tsconfig.json
+
+✔ canvas dimension validation is atomic (3.8476ms)
+✔ all six types support polymorphic operations and independent cloning (12.5832ms)
+✔ nested transforms update lookup indexes and preserve parent links (4.5794ms)
+✔ duplicate IDs include descendants and remain case sensitive (1.8048ms)
+✔ reparent keeps one parent and rejects cycles without mutation (2.0552ms)
+✔ overflow after first child and invalid attributes leave full state unchanged (1.713ms)
+✔ document input, query and memento boundaries prevent mutable aliasing (0.9007ms)
+✔ containers reject identity cycles; canvas is not a graph element (0.6882ms)
+✔ polymorphic emission preserves nesting and text without tag dispatch (1.2691ms)
+✔ one object cannot be attached to two containers; detaching transfers ownership (0.8909ms)
+✔ same-parent reparent appends and descendant styles stay explicit (1.0734ms)
+✔ original sections 6 and 6.1 A replay through actual CLI with semantic assertions (2353.4363ms)
+✔ all geometry whitelist entries edit and undo; foreign attributes rejected for every type (33.4812ms)
+✔ all document-dependent commands reject missing document; help lists all 19 commands (4.202ms)
+✔ session query snapshots cannot mutate current document or bypass its history (1.2862ms)
+✔ production architecture: class files, encapsulation, permitted imports and dispatch audit (217.8875ms)
+✔ quoted text, escapes, ordinary Windows slashes and colors survive tokenization (6.8227ms)
+✔ help works before init and nested creates show geometry and parent (11.4136ms)
+✔ all six factory types, optional style and quoted in text (5.751ms)
+✔ every failed command preserves document and REPL recovers (3.4663ms)
+✔ real process prints prompt, errors, Chinese, and exits on EOF (447.3364ms)
+✔ recursive move and scale change positions and dimensions; history restores exact values (33.8592ms)
+✔ delete restores full nested subtree, attributes, IDs, parents and sibling order (8.6422ms)
+✔ set whitelist and inherited style restore exactly, including missing attributes (4.3449ms)
+✔ new edit including create/no-op clears redo but failures and queries preserve it (6.0491ms)
+✔ init barrier persists through failed edits and queries, then successful editing unlocks it (1.3663ms)
+✔ overflow failure preserves redo and existing undo entry (5.7029ms)
+✔ application transaction discards mutations if a command throws after changing candidate (4.7268ms)
+✔ create undo and redo preserve insertion order and clear history when exhausted (2.8086ms)
+✔ auto IDs reserve future explicit IDs, report warnings and count groups (16.696ms)
+✔ codec roundtrip preserves all six types, ordering, styles, text and whitespace (17.6573ms)
+✔ malformed or unsupported SVG is rejected instead of silently dropping data (5.4192ms)
+✔ save read roundtrip with spaced path, default read path and explicit save does not rebind (41.8966ms)
+✔ read/write failures preserve full state, default path and redo; no warning on failed import (20.0701ms)
+✔ canvas query preserves redo while successful resize sets barrier; failures preserve history (4.5294ms)
+✔ read works before init; successful read and save block both undo and redo (10.3122ms)
+✔ save encoding failure preserves original file, document and redo (20.066ms)
+✔ same-parent group ignores argument order and replaces earliest selected position (18.0827ms)
+✔ cross-parent grouping uses nearest common ancestor and original depth-first order (5.8657ms)
+✔ cross-root mixed direct and deep targets retain unselected branches (3.9348ms)
+✔ ungroup promotes children exactly into original slot; empty group can be dissolved (13.3212ms)
+✔ addto moves a subtree as last child and same-parent addto appends (6.376ms)
+✔ front/back only reorder siblings and emit in visual stacking order (5.4872ms)
+✔ invalid grouping, root ungroup and cycles preserve full state and redo (10.9424ms)
+✔ each structural edit is one history unit; all successful commands clear redo (8.9776ms)
+ℹ tests 45
+ℹ suites 0
+ℹ pass 45
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2919.8746

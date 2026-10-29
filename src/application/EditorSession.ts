@@ -49,7 +49,7 @@ export class EditorSession {
   }
   document(): SvgDocument {
     if (!this.#document) throw new Error("no document. use 'init' or 'read' first");
-    return this.#document;
+    return this.#document.clone();
   }
   executeEdit(command: EditCommand): string {
     const before = this.document();

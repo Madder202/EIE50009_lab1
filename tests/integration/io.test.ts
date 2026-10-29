@@ -26,11 +26,12 @@ test('auto IDs reserve future explicit IDs, report warnings and count groups',()
 test('codec roundtrip preserves all six types, ordering, styles, text and whitespace',()=>{
  const {session,run}=setup();run('init 400 300');
  for(const line of ['create g g','create rect r 1.5 -2 30 40 in g','create circle c 1 2 3 red in g','create ellipse e 1 2 3 4 in g','create line l 1 2 3 4 black','create text t 1 2 "中文 & < >" in g','set g fill blue','set r stroke-width 2'])run(line);
- session.document().setAttribute('t','text',' \t<&>"\'中文😀\r\n ');
- session.document().setAttribute('r','fill','a&"<>\t\n');
- const codec=new SvgCodec(),source=codec.encode(session.document());
+ const document=session.document();
+ document.setAttribute('t','text',' \t<&>"\'中文😀\r\n ');
+ document.setAttribute('r','fill','a&"<>\t\n');
+ const codec=new SvgCodec(),source=codec.encode(document);
  assert.match(source,/&amp;/);assert.match(source,/&lt;/);assert.match(source,/&quot;/);assert.match(source,/&#13;/);
- const decoded=codec.decode(source);assert.deepEqual(decoded.document.tree(),session.document().tree());assert.deepEqual(decoded.warnings,[]);
+ const decoded=codec.decode(source);assert.deepEqual(decoded.document.tree(),document.tree());assert.deepEqual(decoded.warnings,[]);
  assert.equal(decoded.document.width,400);assert.equal(decoded.document.height,300);
  assert.equal(decoded.document.parentId('t'),'g');
 });
@@ -86,7 +87,7 @@ test('save encoding failure preserves original file, document and redo',()=>{
  const dir=mkdtempSync(join(process.cwd(),'.io-test-'));
  try {
   const {session,repl,run,snap}=setup();const path=join(dir,'preserved.svg');writeFileSync(path,'original');
-  run('init');run('create text t 1 2 "ok"');session.document().setAttribute('t','text','bad\u0000');run('move t 1 0');const after=snap();run('undo');const before=snap();
+  run('init');run('create text t 1 2 "ok"');run('set t text "bad\u0000"');run('move t 1 0');const after=snap();run('undo');const before=snap();
   assert.equal(repl.evaluate(`save "${path}"`),'error: invalid XML character');assert.equal(readFileSync(path,'utf8'),'original');assert.equal(snap(),before);run('redo');assert.equal(snap(),after);
  } finally {rmSync(dir,{recursive:true,force:true});}
 });

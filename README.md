@@ -92,3 +92,12 @@ move 的目标应替换为你的实际 ID。将生成的 SVG 拖入 Edge/Chrome 
 save 无参数使用最近成功 read 的路径；init 后必须提供路径，显式 save 不重新绑定默认路径。路径含空格时使用双引号。成功 init/read/save/canvas 修改尺寸后 undo/redo 被禁止，下一次成功编辑才解除；canvas 无参数查询不影响历史。
 
 read 对缺失或空 ID 自动分配标签名加序号，先预留所有显式 ID 避免冲突；成功后打印警告。支持六种内置元素、嵌套 g、公共样式、几何属性和 text 文本；根需要标准 SVG namespace、正数 width/height，viewBox 可缺省或与画布一致。transform、font-size、text-anchor、未知元素/属性、非匹配 viewBox、DTD 等超出当前确认范围，明确报错，不能读取任意 SVG 编辑器导出的文件。文件以 UTF-8 读写。
+
+## 综合验收成果
+
+已完成 45 项测试与原文案例回放，详见 [逐项验收记录](doc/acceptance/README.md)。
+
+- [第 6 节 demo.svg](examples/acceptance/demo.svg) / [PNG 预览](doc/acceptance/demo.png)
+- [第 6.1 节版本 A flowchart.svg](examples/acceptance/flowchart.svg) / [PNG 预览](doc/acceptance/flowchart.png)
+
+测试会重新生成案例日志与预览；字体差异可能导致不同系统的 PNG 不完全相同。SVG 可直接在浏览器打开。
