@@ -1,6 +1,6 @@
 # Lab1 Phase 1 项目文档
 
-本项目实现 TypeScript 面向对象的 CLI SVG 编辑器。当前完成领域模型及基础 CLI（init/create/tree/show/help），文件 IO 和撤销重做尚未接入。所有工程产物位于 EIE50009_lab1 内，需求和验收矩阵见 [requirements.md](requirements.md)。
+本项目实现 TypeScript 面向对象的 CLI SVG 编辑器。当前完成领域模型、基础 CLI 和编辑历史（create/move/scale/set/delete/undo/redo）；文件 IO 与结构编辑 CLI 尚未接入。所有工程产物位于 EIE50009_lab1 内，需求和验收矩阵见 [requirements.md](requirements.md)。
 
 ## 架构方案
 
@@ -189,3 +189,16 @@ D01 示例：根为 A[a,x]、B[b,y]，group G b a 后为 G[a,b]、A[x]、B[y]；
 验证：npm test 编译并通过全部 16 项测试（原 11 项领域测试及 5 项集成测试）；npm run check 通过。集成测试覆盖 token 边界、六类型构建、嵌套 in、show/tree、默认尺寸、未知命令/类型、重复 ID、无容器/非容器、错误参数、失败后完整树与画布保持不变，以及真实 Node 子进程 EOF 退出。另用 examples/intro.txt 实际执行 npm run cli，验证中文、颜色、错误恢复和嵌套结构。
 
 架构进度：factory、application、presentation、bootstrap 按规划落地；新增应用接口 CommandToken 和 DocumentDisplay，均为只读传输/抽象，不是贫血领域模型。ShapeDefinition 当前仅实现 CLI 构造；SVG 属性构造留在 read 阶段扩展同一工厂，不新增类型分派。Command 已开始落地；EditCommand 和 History 仍待撤销阶段实现，不宣称 create 已支持撤销。A01/A03/A04/A15 的本轮支持范围已有集成证据，完整 help/历史/IO 验收待后续补齐。
+
+
+### 2026-10-29：Command 编辑与撤销重做
+
+新增 EditCommand 抽象类，CreateCommand 改为继承该类；MoveCommand、ScaleCommand、SetCommand、DeleteCommand 各自封装输入参数和 apply 行为。命令只通过 SvgDocument 执行业务操作，未新增图形类型分派。UndoCommand/RedoCommand 委托 EditorSession，不作为普通编辑加入历史。
+
+HistoryEntry 私有持有操作前后 DocumentMemento 和成功摘要；History 采用不可变栈状态，record/undo/redo 返回准备好的下一状态。EditorSession 克隆候选文档、执行 apply、构建快照及下一历史，全部成功后同步发布文档和历史。undo/redo 同样先恢复快照、构建下一栈再发布，恢复原始数值而不是执行逆算术。成功 init 创建空历史屏障，失败 init 保留旧文档与两栈；查询、注释及失败命令不改变历史。成功的无效果编辑仍是一个单元并清空 redo。
+
+验证：npm test 编译并通过全部 24 项测试，其中新增 8 项历史集成测试。覆盖六类型递归变换、位置和尺寸同时缩放、连续撤销重做的精确快照、属性白名单与默认属性恢复、描边不缩放、删除嵌套子树后父级/ID/同级顺序恢复、创建撤销、空栈、init 屏障、新编辑清空 redo、无效果编辑，以及失败操作和查询保留 redo。用故障命令在候选文档修改后主动抛错，确认文档与历史完全未发布。
+
+通过 examples/history.txt 实际回放 npm run cli，观察 move/scale、文字修改、子树删除和撤销、无效缩放、redo 分支清空的反馈。撤销/重做输出为 undone:/redone: 加原操作摘要，以标识所恢复的历史单元。原文的 error: 固定错误保持一致。
+
+架构一致性：新增 History、HistoryEntry、HistoryTransition 及各独立命令文件均位于原规划模块。HistoryTransition 是只读事务结果，不替代领域对象；图形逻辑仍留在领域对象。为确保领域单独使用与应用事务都具备失败隔离，目前仍有多层复制，保留前一阶段记录的性能限制。功能验收 A05/A06/A07/A12/A14 已获得当前命令范围证据；结构编辑和 IO 对历史的完整验收在后续阶段继续，未实现功能不宣称通过。

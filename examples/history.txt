@@ -1,0 +1,23 @@
+# 编辑与历史体验
+init 800 600
+create g scene
+create g node in scene
+create rect panel 20 30 160 60 #4a90d9 in node
+create text title 35 65 "你好 SVG 编辑器" in node
+move node 30 10
+scale node 2
+tree
+undo
+tree
+redo
+set title text "更新后的标题"
+delete node
+tree
+undo
+tree
+# 无效缩放：不改变画布和历史
+scale node 0
+undo
+# 新编辑清除 redo
+set panel fill orange
+redo

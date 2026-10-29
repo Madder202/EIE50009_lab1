@@ -1,3 +1,9 @@
+import { MoveCommand } from './commands/MoveCommand.js';
+import { ScaleCommand } from './commands/ScaleCommand.js';
+import { SetCommand } from './commands/SetCommand.js';
+import { DeleteCommand } from './commands/DeleteCommand.js';
+import { UndoCommand } from './commands/UndoCommand.js';
+import { RedoCommand } from './commands/RedoCommand.js';
 import type { CommandToken } from './CommandToken.js';
 import type { Command } from './commands/Command.js';
 import { InitCommand } from './commands/InitCommand.js';
@@ -15,6 +21,12 @@ export class CommandDispatcher {
     this.#commands = new Map([
       ['init', { syntax: 'init [w] [h]', build: args => new InitCommand(args.map(t => t.value)) }],
       ['create', { syntax: 'create <type> <id> [params] [in <containerId>]', build: args => new CreateCommand(args, factory) }],
+      ['move', { syntax: 'move <id> <dx> <dy>', build: args => new MoveCommand(args.map(t => t.value)) }],
+      ['scale', { syntax: 'scale <id> <factor>', build: args => new ScaleCommand(args.map(t => t.value)) }],
+      ['set', { syntax: 'set <id> <attr> <value>', build: args => new SetCommand(args.map(t => t.value)) }],
+      ['delete', { syntax: 'delete <id>', build: args => new DeleteCommand(args.map(t => t.value)) }],
+      ['undo', { syntax: 'undo', build: args => new UndoCommand(args.map(t => t.value)) }],
+      ['redo', { syntax: 'redo', build: args => new RedoCommand(args.map(t => t.value)) }],
       ['tree', { syntax: 'tree [id]', build: args => new TreeCommand(args.map(t => t.value), display) }],
       ['show', { syntax: 'show <id>', build: args => new ShowCommand(args.map(t => t.value), display) }],
       ['help', { syntax: 'help', build: args => new HelpCommand(args.map(t => t.value), this.help()) }],

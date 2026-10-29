@@ -1,6 +1,6 @@
 # EIE50009 Lab1
 
-TypeScript 面向对象 CLI SVG 编辑器。当前支持 init、create（六种类型及 in）、tree、show、help。
+TypeScript 面向对象 CLI SVG 编辑器。当前支持 init、create（六种类型及 in）、move、scale、set、delete、undo、redo、tree、show、help。
 
 ## 启动
 
@@ -40,4 +40,26 @@ npm run check
 ```
 
 npm test 编译并运行领域和 CLI 集成测试。dist/ 和 node_modules/ 不提交。
-本阶段输出结构树与属性，不显示图形画布；save/read、编辑命令和 undo/redo 尚未接入。架构与过程记录见 [doc/README.md](doc/README.md)。
+本阶段输出结构树与属性，不显示图形画布；save/read 及 group/ungroup/addto/front/back CLI 命令尚未接入。架构与过程记录见 [doc/README.md](doc/README.md)。
+
+## 编辑与撤销体验
+
+启动 npm run cli 后可继续输入：
+
+```text
+move scene 30 10
+scale scene 2
+tree
+undo
+tree
+redo
+set title text "修改后的标题"
+delete scene
+tree
+undo
+tree
+```
+
+scale 同时缩放位置与尺寸，stroke-width 不变。一次编辑对应一次撤销，create 也可撤销；查询不入栈。undo 后成功的新编辑清空 redo，失败命令保留历史。成功 init 清空历史并设置屏障，直到下一条成功编辑解除；屏障期间 undo/redo 报错。
+
+[examples/history.txt](examples/history.txt) 是独立完整的编辑回放脚本，可像 intro.txt 一样通过 PowerShell 管道运行。该脚本包含预期失败的 scale 0 和清空历史分支后的 redo。
